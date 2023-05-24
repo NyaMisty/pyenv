@@ -1,0 +1,15 @@
+*** a/setup.py	2023-05-24 11:04:06.278481556 +0000
+--- b/setup.py	2023-05-24 11:09:46.420687066 +0000
+*************** def add_dir_to_list(dirlist, dir):
+*** 44,49 ****
+--- 44,53 ----
+              # If in a macOS SDK path, check relative to the SDK root
+              dir_exists = os.path.isdir(
+                  os.path.join(macosx_sdk_root(), dir[1:]))
++         elif 'GENTOO_PREFIX' in os.environ:
++             if dir.startswith('/usr'):
++                 dir = os.environ['GENTOO_PREFIX'] + dir
++             dir_exists = os.path.isdir(dir)
+          else:
+              dir_exists = os.path.isdir(dir)
+          if dir_exists:

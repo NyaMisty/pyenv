@@ -1,0 +1,36 @@
+*** setup.py	2023-05-24 11:25:26.626777040 +0000
+--- setup.py	2023-05-24 11:16:10.723178429 +0000
+*************** class PyBuildExt(build_ext):
+*** 876 ****
+!         if not CROSS_COMPILING:
+--- 876,892 ----
+!         if 'GENTOO_PREFIX' in os.environ:
+!             sysroot = os.environ['GENTOO_PREFIX']
+!             def sysroot_paths(_, subdirs):
+!                 dirs = []
+!                 for subdir in subdirs:
+!                     if os.path.isabs(subdir):
+!                         subdir = subdir[1:]
+!                     path = os.path.join(sysroot, subdir)
+!                     if os.path.isdir(path):
+!                         dirs.append(path)
+!                 return dirs
+!             self.lib_dirs = (self.compiler.library_dirs +
+!                              sysroot_paths(('LDFLAGS', 'CC'), system_lib_dirs))
+!             self.inc_dirs = (self.compiler.include_dirs +
+!                              sysroot_paths(('CPPFLAGS', 'CFLAGS', 'CC'),
+!                                            system_include_dirs))
+!         elif not CROSS_COMPILING:
+*************** class PyBuildExt(build_ext):
+*** 1075 ****
+--- 1092 ----
++         #import pdb;pdb.set_trace()
+*************** class PyBuildExt(build_ext):
+*** 1127 ****
+--- 1145,1146 ----
++                 if 'GENTOO_PREFIX' in os.environ:
++                     curses_includes.append(os.environ['GENTOO_PREFIX'] + '/usr/include/ncursesw')
+*************** class PyBuildExt(build_ext):
+*** 1449 ****
+--- 1469 ----
++             #import pdb; pdb.set_trace()
