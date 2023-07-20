@@ -1,36 +1,63 @@
-*** setup.py	2023-05-24 11:25:26.626777040 +0000
---- setup.py	2023-05-24 11:16:10.723178429 +0000
+*** setup.py	2023-07-20 04:38:20.506054848 +0000
+--- setup1.py	2023-07-20 04:27:05.485910130 +0000
 *************** class PyBuildExt(build_ext):
-*** 876 ****
-!         if not CROSS_COMPILING:
---- 876,892 ----
-!         if 'GENTOO_PREFIX' in os.environ:
-!             sysroot = os.environ['GENTOO_PREFIX']
-!             def sysroot_paths(_, subdirs):
-!                 dirs = []
-!                 for subdir in subdirs:
-!                     if os.path.isabs(subdir):
-!                         subdir = subdir[1:]
-!                     path = os.path.join(sysroot, subdir)
-!                     if os.path.isdir(path):
-!                         dirs.append(path)
-!                 return dirs
-!             self.lib_dirs = (self.compiler.library_dirs +
-!                              sysroot_paths(('LDFLAGS', 'CC'), system_lib_dirs))
-!             self.inc_dirs = (self.compiler.include_dirs +
-!                              sysroot_paths(('CPPFLAGS', 'CFLAGS', 'CC'),
-!                                            system_include_dirs))
-!         elif not CROSS_COMPILING:
+*** 873,878 ****
+--- 873,899 ----
+          # lib_dirs and inc_dirs are used to search for files;
+          # if a file is found in one of those directories, it can
+          # be assumed that no additional -I,-L directives are needed.
++         if 'GENTOO_PREFIX' in os.environ:
++             sysroot = os.environ['GENTOO_PREFIX']
++             def change_root(subdirs):
++                 dirs = []
++                 for subdir in subdirs:
++                     if os.path.isabs(subdir):
++                         path = os.path.join(sysroot, subdir[1:])
++                     else:
++                         path = subdir
++                     if os.path.isdir(path) or subdir.startswith('/usr') or subdir.startswith('/lib'):
++                         dirs.append(path)
++                     else:
++                         dirs.append(subdir)
++                 #return dirs
++                 print(subdirs, dirs)
++                 subdirs[:] = dirs
++             change_root(system_lib_dirs)
++             change_root(system_include_dirs)
++             change_root(self.compiler.library_dirs)
++             change_root(self.compiler.include_dirs)
++             #raise Exception(111)
+          if not CROSS_COMPILING:
+              self.lib_dirs = self.compiler.library_dirs + system_lib_dirs
+              self.inc_dirs = self.compiler.include_dirs + system_include_dirs
 *************** class PyBuildExt(build_ext):
-*** 1075 ****
---- 1092 ----
+*** 1073,1078 ****
+--- 1094,1100 ----
+                  os.unlink(tmpfile)
+          else:
+              do_readline = False
 +         #import pdb;pdb.set_trace()
+          # Issue 7384: If readline is already linked against curses,
+          # use the same library for the readline and curses modules.
+          if 'curses' in readline_termcap_library:
 *************** class PyBuildExt(build_ext):
-*** 1127 ****
---- 1145,1146 ----
+*** 1125,1130 ****
+--- 1147,1154 ----
+          if curses_library == 'ncursesw':
+              curses_defines.append(('HAVE_NCURSESW', '1'))
+              if not CROSS_COMPILING:
 +                 if 'GENTOO_PREFIX' in os.environ:
 +                     curses_includes.append(os.environ['GENTOO_PREFIX'] + '/usr/include/ncursesw')
+                  curses_includes.append('/usr/include/ncursesw')
+              # Bug 1464056: If _curses.so links with ncursesw,
+              # _curses_panel.so must link with panelw.
 *************** class PyBuildExt(build_ext):
-*** 1449 ****
---- 1469 ----
+*** 1447,1452 ****
+--- 1471,1477 ----
+                  ffi_inc = None
+                  print('Header file {} does not exist'.format(ffi_h))
+          if ffi_lib is None and ffi_inc:
 +             #import pdb; pdb.set_trace()
+              for lib_name in ('ffi', 'ffi_pic'):
+                  if (self.compiler.find_library_file(self.lib_dirs, lib_name)):
+                      ffi_lib = lib_name
